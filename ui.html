@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Friday</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Consolas', 'Segoe UI', monospace;
+    background: #04070a;
+    color: #cdeef2;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #hudWrap {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 480px;
+    height: 480px;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    opacity: 0.85;
+  }
+
+  #hudWrap svg { width: 100%; height: 100%; overflow: visible; }
+
+  .ringOuter { animation: spin 20s linear infinite; transform-origin: 240px 240px; }
+  .ringMid   { animation: spinReverse 14s linear infinite; transform-origin: 240px 240px; }
+  .ringInner { animation: spin 9s linear infinite; transform-origin: 240px 240px; }
+
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes spinReverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+
+  .glowArc { filter: drop-shadow(0 0 6px #2fd8ffaa) drop-shadow(0 0 14px #2fd8ff66); }
+  .tick { stroke: #2fd8ff; opacity: 0.6; }
+
+  #friTitle {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 26px;
+    font-weight: bold;
+    letter-spacing: 6px;
+    color: #d6f7ff;
+    text-shadow: 0 0 8px #2fd8ffcc, 0 0 20px #2fd8ff88;
+    white-space: nowrap;
+    z-index: 1;
+    animation: flicker 3s ease-in-out infinite;
+  }
+
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+  }
+
+  #header {
+    z-index: 2;
+    text-align: center;
+    padding: 14px 0 6px;
+    letter-spacing: 4px;
+    font-size: 12px;
+    color: #8fd9ff88;
+  }
+
+  #chat {
+    z-index: 2;
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 60px;
+  }
+
+  #chat::-webkit-scrollbar { width: 6px; }
+  #chat::-webkit-scrollbar-thumb { background: #2fd8ff55; border-radius: 4px; }
+
+  .msg {
+    margin-bottom: 14px;
+    padding: 12px 16px;
+    border-radius: 4px;
+    max-width: 70%;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    font-size: 14px;
+    backdrop-filter: blur(6px);
+    border: 1px solid #2fd8ff33;
+  }
+
+  .user {
+    background: rgba(47, 216, 255, 0.08);
+    margin-left: auto;
+    text-align: right;
+    border-right: 2px solid #2fd8ff;
+    color: #e3fbff;
+  }
+
+  .assistant {
+    background: rgba(6, 12, 16, 0.8);
+    margin-right: auto;
+    border-left: 2px solid #2fd8ff;
+    color: #cdeef2;
+  }
+
+  #inputArea {
+    z-index: 2;
+    display: flex;
+    padding: 14px 60px 20px;
+    gap: 10px;
+  }
+
+  #userInput {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 4px;
+    border: 1px solid #2fd8ff55;
+    background: rgba(4, 10, 14, 0.9);
+    color: #e3fbff;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+  }
+
+  #userInput::placeholder { color: #5a8b95; }
+
+  #userInput:focus {
+    border-color: #2fd8ff;
+    box-shadow: 0 0 10px #2fd8ff55;
+  }
+
+  button {
+    padding: 12px 20px;
+    border-radius: 4px;
+    border: 1px solid #2fd9ffc1;
+    background: rgba(47, 216, 255, 0.08);
+    color: #bdeeff;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+
+  button:hover {
+    background: rgba(47, 216, 255, 0.2);
+    box-shadow: 0 0 10px #2fd8ff77;
+  }
+</style>
+</head>
+<body>
+
+<div id="hudWrap">
+  <svg viewBox="0 0 480 480">
+    <!-- Outer tick ring -->
+    <g class="ringOuter">
+      <circle cx="240" cy="240" r="220" fill="none" stroke="#2fd8ff33" stroke-width="1"/>
+      <g id="outerTicks"></g>
+    </g>
+
+    <!-- Outer segmented arc -->
+    <g class="ringOuter glowArc">
+      <path d="M 240 30 A 210 210 0 0 1 430 200" fill="none" stroke="#2fd8ff" stroke-width="10" stroke-linecap="round"/>
+      <path d="M 60 280 A 210 210 0 0 1 130 440" fill="none" stroke="#2fd8ff" stroke-width="10" stroke-linecap="round"/>
+      <path d="M 340 435 A 210 210 0 0 1 430 320" fill="none" stroke="#2fd8ff" stroke-width="10" stroke-linecap="round"/>
+    </g>
+
+    <!-- Middle ring -->
+    <g class="ringMid glowArc">
+      <path d="M 240 65 A 175 175 0 0 1 400 190" fill="none" stroke="#7be9ff" stroke-width="6" stroke-linecap="round"/>
+      <path d="M 90 320 A 175 175 0 0 1 175 405" fill="none" stroke="#7be9ff" stroke-width="6" stroke-linecap="round"/>
+    </g>
+    <g class="ringMid">
+      <circle cx="240" cy="240" r="175" fill="none" stroke="#2fd8ff22" stroke-width="1" stroke-dasharray="2 6"/>
+    </g>
+
+    <!-- Inner ring -->
+    <g class="ringInner glowArc">
+      <path d="M 240 105 A 135 135 0 0 1 355 175" fill="none" stroke="#2fd8ff" stroke-width="4" stroke-linecap="round"/>
+      <path d="M 125 305 A 135 135 0 0 1 210 372" fill="none" stroke="#2fd8ff" stroke-width="4" stroke-linecap="round"/>
+      <path d="M 280 373 A 135 135 0 0 1 350 320" fill="none" stroke="#2fd8ff" stroke-width="4" stroke-linecap="round"/>
+    </g>
+
+    <!-- Core faint circle -->
+    <circle cx="240" cy="240" r="95" fill="none" stroke="#2fd8ff22" stroke-width="1"/>
+  </svg>
+</div>
+
+<div id="friTitle">F.R.I.D.A.Y.</div>
+
+<div id="header">SYSTEM ONLINE</div>
+<div id="chat"></div>
+
+<div id="inputArea">
+  <input type="text" id="userInput" placeholder="Talk to Friday..." onkeydown="if(event.key==='Enter') sendMessage()">
+  <button onclick="startVoice()">🎙 Voice</button>
+  <button onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+// Generate tick marks around the outer ring
+const outerTicks = document.getElementById('outerTicks');
+const cx = 240, cy = 240, r1 = 205, r2 = 220;
+for (let i = 0; i < 60; i++) {
+  const angle = (i / 60) * Math.PI * 2;
+  const x1 = cx + Math.cos(angle) * r1;
+  const y1 = cy + Math.sin(angle) * r1;
+  const x2 = cx + Math.cos(angle) * r2;
+  const y2 = cy + Math.sin(angle) * r2;
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+  line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+  line.setAttribute('class', 'tick');
+  line.setAttribute('stroke-width', i % 5 === 0 ? '2' : '1');
+  outerTicks.appendChild(line);
+}
+
+function addMessage(text, sender) {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = 'msg ' + sender;
+  div.innerText = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+addMessage("Hello! I am Friday. Click 🎙 Voice and talk to me.", "assistant");
+
+async function sendMessage() {
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text) return;
+  addMessage(text, 'user');
+  input.value = '';
+  addMessage('Thinking...', 'assistant');
+  const chat = document.getElementById('chat');
+  const thinkingMsg = chat.lastChild;
+  try {
+    const reply = await window.pywebview.api.send_message(text);
+    thinkingMsg.innerText = reply;
+  } catch (err) {
+    thinkingMsg.innerText = 'Error: ' + err;
+  }
+}
+
+async function startVoice() {
+  addMessage('Listening...', 'assistant');
+  const chat = document.getElementById('chat');
+  const listeningMsg = chat.lastChild;
+  try {
+    const reply = await window.pywebview.api.listen_voice();
+    listeningMsg.innerText = reply;
+  } catch (err) {
+    listeningMsg.innerText = 'Voice error: ' + err;
+  }
+}
+</script>
+
+</body>
+</html>
